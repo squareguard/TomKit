@@ -1,0 +1,205 @@
+:root {
+  --bg: #0b0c10;
+  --card: #111217;
+  --muted: #7a7f88;
+  --text: #e6e7ea;
+  --brand: #6ea8fe;
+  --brand-2: #8fd3ff;
+  --ring: #99c2ff;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --highlight: #ffeb3b;
+  --highlight-bg: rgba(255, 235, 59, 0.3);
+}
+
+body { 
+  background: var(--bg); 
+  color: var(--text); 
+  margin: 0; 
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.toolbar {
+  background: var(--card);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: var(--shadow);
+  z-index: 10;
+  -webkit-app-region: drag;
+  flex-wrap: wrap;
+}
+
+.search-container {
+  position: relative;
+  flex: 1;
+  max-width: 400px;
+  min-width: 200px;
+  -webkit-app-region: no-drag;
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px 12px 8px 36px;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  transition: all 0.2s ease;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, Cantarell, 'Noto Sans', sans-serif;
+}
+
+.search-input:focus {
+  border-color: var(--brand);
+  background: rgba(255,255,255,0.08);
+  box-shadow: 0 0 0 3px rgba(110, 168, 254, 0.2);
+}
+
+.search-input::placeholder {
+  color: var(--muted);
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.search-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  -webkit-app-region: no-drag;
+  flex-shrink: 0;
+  min-width: fit-content;
+  margin-left: auto;
+}
+
+.search-btn {
+  padding: 6px 12px;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.05);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.search-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.search-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: var(--brand);
+}
+
+.search-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.search-count {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.log-size {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  margin-right: 8px;
+}
+
+.clear-btn {
+  background: rgba(255, 85, 85, 0.1) !important;
+  border-color: rgba(255, 85, 85, 0.3) !important;
+  color: #ff5555 !important;
+}
+
+.clear-btn:hover {
+  background: rgba(255, 85, 85, 0.2) !important;
+  border-color: #ff5555 !important;
+}
+
+.log-empty {
+  color: var(--muted);
+  font-style: italic;
+}
+
+#log { 
+  white-space: pre-wrap; 
+  padding: 16px; 
+  flex: 1;
+  overflow-y: auto; 
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.highlight {
+  background-color: var(--highlight-bg);
+  color: #000;
+  border-radius: 2px;
+  padding: 1px 2px;
+}
+
+.highlight.current {
+  background-color: var(--highlight);
+  color: #000;
+  box-shadow: 0 0 0 1px var(--highlight);
+}
+
+/* Log level styling */
+.log-line {
+  display: block;
+}
+
+.log-line.error {
+  color: #ff5555;
+  background-color: rgba(255, 85, 85, 0.1);
+}
+
+.log-line.warn {
+  color: #fff700;
+  background-color: rgba(255, 193, 7, 0.1);
+}
+
+.log-line.info {
+  color: var(--text);
+}
+
+.log-line.debug {
+  color: var(--muted);
+  opacity: 0.8;
+}
+
+.log-line.severe {
+  color: #ff3333;
+  background-color: rgba(255, 51, 51, 0.15);
+  font-weight: 500;
+}
+
+.log-line.fatal {
+  color: #ff0000;
+  background-color: rgba(255, 0, 0, 0.2);
+  font-weight: bold;
+}

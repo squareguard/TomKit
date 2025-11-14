@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TomKit — Tomcat configuration</title>
+  <link rel="stylesheet" href="stylesheets/main.css"/>
+</head>
+<body>
+  <main class="card" role="region" aria-labelledby="title">
+    <header class="header">
+      <h1 class="title" id="title">
+        <span aria-hidden="true">
+        <img src="images/TomKit-icon.png" alt="TomKit Icon" width="128" height="29.25">
+        </span>
+      <span class="version" id="version">v0.0.0</span>
+      </h1>
+
+      <span class="version">by Squareguard</span>
+      <button type="button" class="quit-button" id="quitButton" title="Quit">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+
+      <button type="button" class="settings-button" id="settingsButton" title="Settings">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M20 7h-9m3 10H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
+      </button>
+
+      <button type="button" class="minimize-button" id="minimizeButton" title="Minimize">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+      </button>
+
+    </header>
+
+     <!-- Main form for user input -->
+    <form id="tomkit-form" action="#" method="post" novalidate>
+        <div class="row">
+            <div class="field">
+
+              <!-- Dropdown to select install mode -->
+            <label for="installType">Install mode</label>
+            <select id="installType" name="installType">
+                <option value="homebrew">Homebrew</option>
+                <option value="manual">Manual</option>
+            </select>
+            </div>
+            <div class="field">
+
+              <!-- Input for Tomcat port -->
+              <label for="tomcatPort">Port</label>
+              <input id="tomcatPort" name="tomcatPort" type="number" value="8080" min="1024" max="65535" autocomplete="off"/>
+            </div>
+            <div class="field">
+              <!-- Dropdown to select webapp to launch -->
+              <label for="webappSelect">Webapp</label>
+              <select id="webappSelect" name="webappSelect" disabled>
+                <option value="ALL" selected>All</option>
+                <option value="ROOT">ROOT</option>
+              </select>
+            </div>
+        </div>
+      <div class="row">
+        <div class="field">
+
+          <!-- Input for Tomcat install location -->
+          <label for="installLocation">Install location</label>
+          <input id="installLocation" name="installLocation" type="text" placeholder="e.g /usr/local/opt/tomcat/libexec" autocomplete="off" required/>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="controls">
+
+          <!-- Start and Stop buttons -->
+          <button type="button" class="start-button" id="btnStart" title="Start Server">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          </button>
+          <button type="button" class="stop-button" id="btnStop" title="Stop Server">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="6" width="12" height="12" rx="2"/>
+            </svg>
+          </button>
+          <button type="button" class="log-button" id="openLog" title="View Logs">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14,2 14,8 20,8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10,9 9,9 8,9"/>
+            </svg>
+          </button>
+          <button type="button" class="launch-button" id="launchWebappBtn" title="Launch Webapp" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="footer-right">
+          <span class="status" id="status" aria-live="polite">
+            <span class="status-dot" aria-hidden="true"></span>
+            Idle
+          </span>
+        </div>
+      </div>
+    </form>
+
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settingsPanel" style="display: none;">
+      <div class="settings-header">
+        <h2>Settings</h2>
+        <button type="button" class="close-settings" id="closeSettings" title="Close Settings">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="settings-content">
+        <div class="setting-group">
+          <h3>Appearance</h3>
+          <div class="setting-item">
+            <label for="themeSelect">Theme</label>
+            <select id="themeSelect" name="theme">
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+              <option value="auto">Auto</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h3>Notifications</h3>
+          <div class="setting-item">
+            <label for="notificationsToggle">
+              <input type="checkbox" id="notificationsToggle" name="notifications">
+              Enable notifications
+            </label>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h3>Tomcat Behavior</h3>
+          <div class="setting-item">
+            <label for="autoLaunchToggle">
+              <input type="checkbox" id="autoLaunchToggle" name="autoLaunch">
+              Auto-launch webapp after startup
+            </label>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h3>System Integration</h3>
+          <div class="setting-item">
+            <label for="autoStartToggle">
+              <input type="checkbox" id="autoStartToggle" name="autoStart">
+              Start with system
+            </label>
+          </div>
+          <div class="setting-item">
+            <label for="minimizeToTrayToggle">
+              <input type="checkbox" id="minimizeToTrayToggle" name="minimizeToTray">
+              Minimize to system tray
+            </label>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h3>Keyboard Shortcuts</h3>
+          <div class="shortcut-list">
+            <div class="shortcut-item">
+              <span class="shortcut-action">Start Tomcat</span>
+              <span class="shortcut-keys">Cmd/Ctrl + R</span>
+            </div>
+            <div class="shortcut-item">
+              <span class="shortcut-action">Stop Tomcat</span>
+              <span class="shortcut-keys">Cmd/Ctrl + S</span>
+            </div>
+            <div class="shortcut-item">
+              <span class="shortcut-action">Toggle Log Window</span>
+              <span class="shortcut-keys">Cmd/Ctrl + L</span>
+            </div>
+            <div class="shortcut-item">
+              <span class="shortcut-action">Show/Hide Window</span>
+              <span class="shortcut-keys">Cmd/Ctrl + Shift + T</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- JavaScript Modules -->
+  <script src="js/config.js"></script>
+  <script src="js/tomcat-controller.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

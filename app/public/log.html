@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Catalina Log</title>
+  <link rel="stylesheet" href="stylesheets/log.css">
+</head>
+<body>
+  <div class="toolbar">
+    <div class="search-container">
+      <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"></path>
+      </svg>
+      <input type="text" class="search-input" placeholder="Find..." id="searchInput">
+    </div>
+
+    <span style="flex:0 0 12px"> </span>
+
+    <div class="search-controls">
+      <span class="log-size" id="logSize" title="Current log size">0 KB</span>
+      <span class="search-count" id="searchCount"></span>
+      <button class="search-btn" id="prevBtn" disabled>Previous</button>
+      <button class="search-btn" id="nextBtn" disabled>Next</button>
+      <button class="search-btn" id="exportBtn" title="Export log to file">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+        </svg>
+        Export
+      </button>
+      <button class="search-btn clear-btn" id="clearBtn" title="Clear log content">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+        Clear
+      </button>
+    </div>
+  </div>
+  
+  <pre id="log">Loading log file...</pre>
+  <script>
+    let originalLogText = '';
+    let currentMatches = [];
+    let currentMatchIndex = -1;
+    let currentLogPath = null; // Store the current log file path
+
+    // Function to detect log level from a line
+    function detectLogLevel(line) {
+      const upperLine = line.toUpperCase();
+      
+      // Check for common log patterns
+      if (upperLine.includes('SEVERE') || upperLine.includes('FATAL')) {
+        return 'severe';
+      }
+      if (upperLine.includes('ERROR')) {
+        return 'error';
+      }
+      if (upperLine.includes('WARN')) {
+        return 'warn';
+      }
+      if (upperLine.includes('INFO')) {
+        return 'info';
+      }
+      if (upperLine.includes('DEBUG') || upperLine.includes('FINE')) {
+        return 'debug';
+      }
+      
+      // Check for common error indicators
+      if (upperLine.includes('EXCEPTION') || 
+          upperLine.includes('STACKTRACE') || 
+          upperLine.includes('CAUSED BY') ||
+          upperLine.includes('FAILED') ||
+          upperLine.includes('UNABLE') ||
+          upperLine.includes('TIMEOUT')) {
+        return 'error';
+      }
+      
+      return 'info'; // Default
+    }
+
+    // Function to format log content with color coding
+    function formatLogContent(logText) {
+      const lines = logText.split('\n');
+      let formattedLines = [];
+      
+      lines.forEach(line => {
+        if (line.trim()) {
+          const logLevel = detectLogLevel(line);
+          formattedLines.push(`<span class="log-line ${logLevel}">${escapeHtml(line)}</span>`);
+        } else {
+          formattedLines.push('');
+        }
+      });
+      
+      return formattedLines.join('\n');
+    }
+
+    // Function to escape HTML characters
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Search functionality
+    function performSearch(searchTerm) {
+      const log = document.getElementById('log');
+      const searchCount = document.getElementById('searchCount');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+
+      if (!searchTerm.trim()) {
+        log.innerHTML = formatLogContent(originalLogText);
+        searchCount.textContent = '';
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+        currentMatches = [];
+        currentMatchIndex = -1;
+        return;
+      }
+
+      // Create regex for case-insensitive search
+      const regex = new RegExp(escapeRegExp(searchTerm), 'gi');
+      const matches = [...originalLogText.matchAll(regex)];
+      currentMatches = matches;
+      currentMatchIndex = matches.length > 0 ? 0 : -1;
+
+      if (matches.length === 0) {
+        log.innerHTML = formatLogContent(originalLogText);
+        searchCount.textContent = 'No matches';
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+        return;
+      }
+
+      // Highlight all matches in the original text first
+      let highlightedText = originalLogText;
+      let offset = 0;
+      
+      matches.forEach((match, index) => {
+        const start = match.index + offset;
+        const end = start + match[0].length;
+        const highlightClass = index === currentMatchIndex ? 'highlight current' : 'highlight';
+        const replacement = `<span class="${highlightClass}" data-match-index="${index}">${match[0]}</span>`;
+        
+        highlightedText = highlightedText.slice(0, start) + replacement + highlightedText.slice(end);
+        offset += replacement.length - match[0].length;
+      });
+
+      // Format the highlighted text with log level colors
+      log.innerHTML = formatLogContentWithHighlights(highlightedText);
+      searchCount.textContent = `${currentMatchIndex + 1} of ${matches.length}`;
+      prevBtn.disabled = matches.length <= 1;
+      nextBtn.disabled = matches.length <= 1;
+
+      // Scroll to current match
+      scrollToCurrentMatch();
+    }
+
+    // Function to format log content while preserving existing highlights
+    function formatLogContentWithHighlights(logText) {
+      const lines = logText.split('\n');
+      let formattedLines = [];
+      
+      lines.forEach(line => {
+        if (line.trim()) {
+          const logLevel = detectLogLevel(line);
+          // If line contains highlights, preserve them
+          if (line.includes('<span class="highlight')) {
+            formattedLines.push(`<span class="log-line ${logLevel}">${line}</span>`);
+          } else {
+            formattedLines.push(`<span class="log-line ${logLevel}">${escapeHtml(line)}</span>`);
+          }
+        } else {
+          formattedLines.push('');
+        }
+      });
+      
+      return formattedLines.join('\n');
+    }
+
+    function escapeRegExp(string) {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function scrollToCurrentMatch() {
+      const currentHighlight = document.querySelector('.highlight.current');
+      if (currentHighlight) {
+        currentHighlight.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+      }
+    }
+
+    function navigateToMatch(direction) {
+      if (currentMatches.length === 0) return;
+
+      // Update current match index
+      if (direction === 'next') {
+        currentMatchIndex = (currentMatchIndex + 1) % currentMatches.length;
+      } else {
+        currentMatchIndex = currentMatchIndex <= 0 ? currentMatches.length - 1 : currentMatchIndex - 1;
+      }
+
+      // Update highlights
+      document.querySelectorAll('.highlight').forEach((element, index) => {
+        element.className = index === currentMatchIndex ? 'highlight current' : 'highlight';
+      });
+
+      // Update counter
+      document.getElementById('searchCount').textContent = `${currentMatchIndex + 1} of ${currentMatches.length}`;
+      
+      // Scroll to current match
+      scrollToCurrentMatch();
+    }
+
+    // Event listeners
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      performSearch(e.target.value);
+    });
+
+    document.getElementById('searchInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          navigateToMatch('prev');
+        } else {
+          navigateToMatch('next');
+        }
+      } else if (e.key === 'Escape') {
+        e.target.value = '';
+        performSearch('');
+      }
+    });
+
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      navigateToMatch('prev');
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      navigateToMatch('next');
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      exportLogToFile();
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      clearLogContent();
+    });
+
+    // Function to export log content to a file
+    function exportLogToFile() {
+      if (!originalLogText.trim()) {
+        alert('No log content to export');
+        return;
+      }
+
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
+      const filename = `tomcat-log-${timestamp}.txt`;
+      
+      const blob = new Blob([originalLogText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.style.display = 'none';
+      
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      URL.revokeObjectURL(url);
+    }
+
+    // Function to clear log content
+    function clearLogContent() {
+      if (!originalLogText.trim()) {
+        alert('No log content to clear');
+        return;
+      }
+
+      if (confirm('Are you sure you want to clear the log file? This will permanently delete all log data and cannot be undone.')) {
+        // Clear the actual log file through the main process, using the current log path
+        window.api.clearLogFile(currentLogPath).then(() => {
+          // Clear the display
+          originalLogText = '';
+          const log = document.getElementById('log');
+          log.innerHTML = '<span class="log-empty">Log file cleared - waiting for new content...</span>';
+          
+          // Clear search state
+          const searchInput = document.getElementById('searchInput');
+          searchInput.value = '';
+          performSearch('');
+          
+          // Update log size
+          updateLogSize();
+        }).catch((error) => {
+          alert('Failed to clear log file: ' + error.message);
+        });
+      }
+    }
+
+    // Function to format file size
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    // Function to update log size indicator
+    function updateLogSize() {
+      const logSizeElement = document.getElementById('logSize');
+      const bytes = new Blob([originalLogText]).size;
+      logSizeElement.textContent = formatFileSize(bytes);
+    }
+
+    window.api.onCatalinaData(data => {
+      const log = document.getElementById('log');
+      
+      // If this is the first data and the current display is still "Loading log file..."
+      if (originalLogText === '' && log.textContent === 'Loading log file...') {
+        // Check if the incoming data is empty or just whitespace
+        if (!data || data.trim() === '') {
+          log.innerHTML = '<span class="log-empty">Log file is empty - waiting for new content...</span>';
+          updateLogSize();
+          return;
+        }
+      }
+      
+      originalLogText += data;
+      
+      // If there's an active search, re-perform it with new data
+      const searchTerm = document.getElementById('searchInput').value;
+      if (searchTerm.trim()) {
+        performSearch(searchTerm);
+      } else {
+        log.innerHTML = formatLogContent(originalLogText);
+      }
+      
+      // Update log size indicator
+      updateLogSize();
+      
+      log.scrollTop = log.scrollHeight;
+    });
+
+    window.api.onStartTail((logPath) => {
+      currentLogPath = logPath; // Store the log path for clearing
+      console.log('Log path set to:', logPath);
+      
+      // Update the loading message to be more specific
+      const log = document.getElementById('log');
+      if (log.textContent === 'Loading log file...') {
+        log.innerHTML = '<span class="log-empty">Monitoring log file - waiting for content...</span>';
+      }
+    });
+  </script>
+</body>
+</html>
