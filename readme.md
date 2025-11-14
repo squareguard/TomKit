@@ -1,7 +1,7 @@
 # ![TomKit](app/public/images/TomKit-icon-small.png) 
 
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
-[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)](https://github.com/josephtuckwell/TomKit)
+[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)](https://github.com/squareguard/TomKit)
 [![Electron](https://img.shields.io/badge/Electron-37.2.6-47848F?logo=electron)](https://www.electronjs.org/)
 
 > A modern, lightweight desktop application for managing Apache Tomcat installations with real-time log monitoring and advanced search capabilities.
@@ -35,7 +35,7 @@
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/josephtuckwell/TomKit.git
+   git clone https://github.com/squareguard/TomKit.git
    cd TomKit/app
    ```
 
@@ -156,7 +156,7 @@ This project is licensed under the ISC License - see the [LICENSE](LICENSE) file
 
 ## 🔄 Version History
 
-See [Releases](https://github.com/josephtuckwell/TomKit/releases) for detailed changelog.
+See [Releases](https://github.com/squareguard/TomKit/releases) for detailed changelog.
 
 ---
 
